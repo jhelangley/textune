@@ -7,5 +7,5 @@ export function charToPitch (char, root, scale) {
     if (alphaPos < 0 || alphaPos > 25) return null;
     const noteOffset = scaleIntervals[alphaPos % scaleIntervals.length];
     const octave = Math.floor(alphaPos / scaleIntervals.length);
-    return 48 + rootOffset + noteOffset + (octave * 12)
+    return 36 + rootOffset + noteOffset + (octave * 12)
 }

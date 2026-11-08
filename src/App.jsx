@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as Tone from 'tone';
 import './App.css'
 import Cell from './components/Cell.jsx'
 import TextInput from './components/TextInput.jsx'
 import PlayBackControl from './components/PlaybackControl.jsx'
 import MusicSettings from './components/MusicSettings.jsx'
+import { charToPitch } from './music/charToPitch.js';
 import { generateSequence } from './music/generateSequence.js'
 
 
@@ -29,10 +30,23 @@ function App() {
     const note = Tone.Frequency(pitch, "midi").toNote()
     synth.current.triggerAttackRelease(note, "8n")
   }
-
-  const handleTextChange = () => {
+  
+  useEffect(() => {
     
-  }
+    const handleKeyDown = (event) => {
+      if (/^[a-zA-Z]$/.test(event.key) && !event.repeat) {
+        const note = charToPitch(event.key, musicSettings.root, musicSettings.scale)
+        playNote(note)
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [musicSettings])
+  
   
   return (
     <>
