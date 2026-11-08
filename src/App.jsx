@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import * as Tone from 'tone';
 import './App.css'
 import Cell from './components/Cell.jsx'
@@ -16,11 +16,13 @@ function App() {
   const [inputText, setInputText] = useState('')
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
-  const [activeCellIndex, setActiveCellIndex] = useState(0)
+  const [activeCellIndex, setActiveCellIndex] = useState(null)
   const [musicSettings, setMusicSettings] = useState({root: 'c', scale: 'major'})
   
-  const sequence = generateSequence(inputText, musicSettings.root, musicSettings.scale)
-  const qNote = Tone.Time("4n").toSeconds();
+  const sequence = useMemo(
+    () => generateSequence(inputText, musicSettings.root, musicSettings.scale), 
+    [inputText, musicSettings.root, musicSettings.scale]
+  );
   
   const synth = useRef(null);
   const partRef = useRef(null);
@@ -33,40 +35,52 @@ function App() {
     synth.current.triggerAttackRelease(note, "8n")
   }
   
-  const startPlayback = async () => {
-    if (sequence.length === 0) {
-      console.log("Sequence must contain at least one note");
-      return
-    }
-    if (synth.current === null) synth.current = new Tone.Synth().toDestination();
-    await Tone.start();
-     
+  const prepToneEvents = (sequence) => {
+    const qNote = Tone.Time("4n").toSeconds();
+    
+    // convert sequence into Tone.Part events
     const noteArray = sequence.map((noteEvent) => {
       
       const startTime = Tone.Time(noteEvent.startTime * qNote).toBarsBeatsSixteenths()
       const noteName = noteEvent.pitch == null ? null : Tone.Frequency(noteEvent.pitch, "midi").toNote();
       
-      
       return { time: startTime, note: noteName, index: noteEvent.index }
     })
+    
+    // calculate loop end point for Tone.Part
+    const lastEvent = sequence[sequence.length-1]
+    const endTime = lastEvent.startTime + lastEvent.timing
+    const loopEnd = Tone.Time(endTime * qNote).toBarsBeatsSixteenths()
+    
+    return { noteArray, loopEnd }
+  }
+  
+  
+  
+  const startPlayback = async () => {
+    if (sequence.length === 0) {
+      console.log("Sequence must contain at least one note");
+      return;
+    }
+    
+    if (synth.current === null) synth.current = new Tone.Synth().toDestination();
+    
+    await Tone.start();
+    
+    const { noteArray, loopEnd } = prepToneEvents(sequence)
+    
     const part = new Tone.Part((time, event) => {
       if (event.note !== null) {
         synth.current.triggerAttackRelease(event.note, "8n", time);
       } 
+      Tone.getDraw().schedule(() => setActiveCellIndex(event.index), time)
     }, noteArray);
     
     part.loop = true;
     part.loopStart = 0;
+    part.loopEnd = loopEnd;
     
-    const loopEnd = () => {
-      const lastEvent = sequence[sequence.length-1]
-      const endTime = lastEvent.startTime + lastEvent.timing
-      return Tone.Time(endTime * qNote).toBarsBeatsSixteenths()
-    }
     
-    part.loopEnd = loopEnd();
-    
-
     const transport = Tone.getTransport();
     transport.stop()
     
@@ -75,9 +89,12 @@ function App() {
     
     partRef.current.start(0);
     transport.start();
+
+    
   } 
   
   const handlePlayback = async () => {
+    if (sequence.length === 0) return;
     const transport = Tone.getTransport();
     if (transport.state === "stopped") {
       await startPlayback()
@@ -90,7 +107,7 @@ function App() {
       setIsPlaying(true);
     }
   }
-
+  
   const restartPlayback = () => {
     const transport = Tone.getTransport();
     transport.position = 0;
@@ -99,6 +116,7 @@ function App() {
   useEffect(() => {
     
     const handleKeyDown = (event) => {
+      if (isPlaying) return;
       if (/^[a-zA-Z]$/.test(event.key) && !event.repeat) {
         const note = charToPitch(event.key, musicSettings.root, musicSettings.scale)
         playNote(note)
@@ -110,7 +128,29 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [musicSettings])
+  }, [musicSettings, isPlaying])
+  
+  
+  
+  useEffect(() => {
+    const transport = Tone.getTransport();
+    Tone.getDraw().cancel();
+    if (partRef.current === null) return;
+    if (sequence.length === 0) {
+      transport.stop();
+      partRef.current.dispose();
+      partRef.current = null;
+      setIsPlaying(false);
+      return;
+    }
+    // const wasPlaying = (transport.state === 'started');
+    // transport.stop();
+    partRef.current.clear();
+    const { noteArray, loopEnd } = prepToneEvents(sequence);
+    noteArray.forEach(event => partRef.current.add(event));
+    partRef.current.loopEnd = loopEnd;
+    // if (wasPlaying) transport.start(); 
+  }, [sequence])
   
   
   return (
@@ -132,6 +172,7 @@ function App() {
       pitch={noteEvent.pitch}
       timing={noteEvent.timing}
       onClick={() => playNote(noteEvent.pitch)}
+      isActive={noteEvent.index === activeCellIndex}
       />))}
       </div>
       <button onClick={() => playNote(65)}>Test sound</button>

@@ -17,7 +17,7 @@
   position: relative;
   box-sizing: border-box;
   border: 2px dotted black;
-
+  color: grey;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,12 +25,19 @@
   animation: appear 180ms ease-out;
 }
 
+.active {
+  background-color: blue;
+  border: 2px solid blue;
+  color: white;
+  font-weight: bold;
+}
+
 .cell-pitch {
   position: absolute;
   bottom: -5px;
   right: 3px;
   font-size: 10px;
-  color: grey;
+  
 }
 
 .cell-timing {
@@ -38,7 +45,6 @@
   bottom: -5px;
   left: 3px;
   font-size: 10px;
-  color: grey;
 }
 
 @keyframes appear {

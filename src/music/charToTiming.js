@@ -29,6 +29,6 @@ const durations = [
 
 export function charToTiming (char) {
     const alphaPos = char.toUpperCase().charCodeAt() - 65;
-    if (alphaPos < 0 || alphaPos > 25) return 1.5;
+    if (alphaPos < 0 || alphaPos > 25) return 2;
     return durations[alphaPos];
 }
