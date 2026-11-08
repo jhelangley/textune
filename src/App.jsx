@@ -27,11 +27,13 @@ function App() {
   );
   
   const synth = useRef(null);
+  const delay = useRef(null);
   const partRef = useRef(null);
   const resumeAfterTypingRef = useRef(false);
   
   const playNote = async (pitch) => {
-    if (synth.current === null) synth.current = new Tone.Synth().toDestination();
+    if (delay.current === null) delay.current = new Tone.FeedbackDelay(0.20, 0.55).toDestination();
+    if (synth.current === null) synth.current = new Tone.Synth().connect(delay.current);
     await Tone.start();
     if (pitch === null) return;
     const note = Tone.Frequency(pitch, "midi").toNote()
@@ -215,7 +217,7 @@ function App() {
     { sequence.map(noteEvent => (
       <Cell key={noteEvent.index} 
       char={noteEvent.char} 
-      pitch={noteEvent.pitch}
+      pitch={noteEvent.pitch != null ? Tone.Frequency(noteEvent.pitch, "midi").toNote() : null}
       timing={noteEvent.timing}
       onClick={() => playNote(noteEvent.pitch)}
       isActive={noteEvent.index === activeCellIndex}
