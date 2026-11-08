@@ -1,6 +1,6 @@
 .app-container {
   min-height: 100vh;
-  transition: background-color 150ms ease;
+  transition: background-color 50ms ease;
 }
 
 .character-grid {

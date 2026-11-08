@@ -25,6 +25,8 @@ function App() {
     () => generateSequence(inputText, musicSettings.root, musicSettings.scale), 
     [inputText, musicSettings.root, musicSettings.scale]
   );
+
+  const isRest = activeCellIndex !== null && sequence[activeCellIndex]?.pitch === null
   
   const synth = useRef(null);
   const delay = useRef(null);
@@ -80,7 +82,9 @@ function App() {
       } 
       Tone.getDraw().schedule(() => {
         setActiveCellIndex(event.index)
-        if (event.note !== null) setBackgroundColour(pitchToColour(event.midiPitch))
+        if (event.note !== null) { 
+          setBackgroundColour(pitchToColour(event.midiPitch)) 
+        } else { setBackgroundColour('white')};
       }, time)
     }, noteArray);
     
@@ -202,7 +206,7 @@ function App() {
   
   return (
     <>
-    <div className='app-container' style={{ backgroundColor: backgroundColour}}>
+    <div className='app-container' style={{ backgroundColor: backgroundColour, transition: `background-color ${isRest ? 2000 : 50}ms ease`}}>
     <PlayBackControl 
     isPlaying={isPlaying}
     setIsPlaying={setIsPlaying}
