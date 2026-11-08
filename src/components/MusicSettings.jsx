@@ -18,10 +18,19 @@ export default function MusicSettings ({musicSettings, setMusicSettings }) {
         return;
     }
 
+    const changeTempo = (direction) => {
+        const newTempo = musicSettings.tempo + direction
+        setMusicSettings(prev => ({...prev, tempo: newTempo}))
+        return;
+    }
+
 
     return (
-        <div id='music-settings-container'>
-            <label>Root:</label>
+        <>
+            
+            <div className='control-box'>
+            <div className='control-title'>ROOT</div>
+            <div className='control-body'>
             <button onClick={() => changeRoot(-1)}>⬅</button>
             <select className='music-settings' value={musicSettings.root} 
             onChange={e => setMusicSettings(prev => ({...prev, root: e.target.value}))}>
@@ -34,7 +43,12 @@ export default function MusicSettings ({musicSettings, setMusicSettings }) {
                 <option value='b'>B</option>
             </select>
             <button onClick={() => changeRoot(1)}>⮕</button>
-            <label>Scale:</label>
+            </div>
+            </div>
+
+            <div className='control-box'>
+            <div className='control-title'>SCALE</div>
+            <div className='control-body'>
             <button onClick={() => changeScale(-1)}>⬅</button>
             <select className='music-settings' value={musicSettings.scale} 
             onChange={e => setMusicSettings(prev => ({...prev, scale: e.target.value}))}>
@@ -49,6 +63,18 @@ export default function MusicSettings ({musicSettings, setMusicSettings }) {
                 <option value='locrian'>Locrian</option>
             </select>
             <button onClick={() => changeScale(1)}>⮕</button>
-        </div>
+            </div>
+            </div>
+
+            <div className='control-box'>
+            <div className='control-title'>TEMPO</div>
+            <div className='control-body'>
+            <button onClick={() => changeTempo(-5)}>⬅</button>
+            <input id="tempo" className="music-settings tempo-control" type="number" min="40" max="200" step="5" value={musicSettings.tempo} onChange={(e) => setMusicSettings(prev => ({...prev, tempo: Number(e.target.value)}))}></input>
+            <button onClick={() => changeTempo(5)}>⮕</button>
+            </div>
+            </div>
+
+        </>
     )
 }

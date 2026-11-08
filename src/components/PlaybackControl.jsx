@@ -1,6 +1,8 @@
-export default function PlayBackControls ({ isPlaying, isMuted, setIsPlaying, setIsMuted, handlePlayback, restartPlayback }) {
+export default function PlayBackControls ({ isPlaying, handlePlayback, restartPlayback }) {
     return (
-        <div id='playback-container'>
+        <div className='control-box'>
+            <div className='control-title'>PLAYBACK</div>
+            <div className='control-body'>
         <button id='play-pause' className='playback-controls' 
             onClick={() => {
                 handlePlayback();
@@ -8,8 +10,8 @@ export default function PlayBackControls ({ isPlaying, isMuted, setIsPlaying, se
 
             {isPlaying ? "Pause" : "Play"}
         </button>
-        <button id='mute' className='playback-controls' onClick={() => setIsMuted(!isMuted)}>{isMuted ? "Unmute" : "Mute"}</button>
         <button id='restart' className='playback-controls' onClick={() => restartPlayback()}>Restart</button>
+        </div>
         </div>
     )
 }

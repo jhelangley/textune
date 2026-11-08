@@ -16,16 +16,15 @@ function App() {
   
   const [inputText, setInputText] = useState('')
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
   const [activeCellIndex, setActiveCellIndex] = useState(null)
-  const [musicSettings, setMusicSettings] = useState({root: 'c', scale: 'major'})
+  const [musicSettings, setMusicSettings] = useState({root: 'c', scale: 'major', tempo: 100})
   const [backgroundColour, setBackgroundColour] = useState("white")
   
   const sequence = useMemo(
     () => generateSequence(inputText, musicSettings.root, musicSettings.scale), 
     [inputText, musicSettings.root, musicSettings.scale]
   );
-
+  
   const isRest = activeCellIndex !== null && sequence[activeCellIndex]?.pitch === null
   
   const synth = useRef(null);
@@ -129,7 +128,11 @@ function App() {
   
   const restartPlayback = () => {
     const transport = Tone.getTransport();
+    console.log("restart clicked");
+    Tone.getDraw().cancel(0);
     transport.position = 0;
+    setActiveCellIndex(null);
+    setBackgroundColour('white');
   }
   
   useEffect(() => {
@@ -149,7 +152,9 @@ function App() {
     }
   }, [musicSettings, isPlaying])
   
-  
+  useEffect(() => {
+    Tone.getTransport().bpm.value = musicSettings.tempo;
+  }, [musicSettings.tempo]);
   
   useEffect(() => {
     if (partRef.current === null || inputText.length === 0) return;
@@ -207,32 +212,61 @@ function App() {
   return (
     <>
     <div className='app-container' style={{ backgroundColor: backgroundColour, transition: `background-color ${isRest ? 2000 : 50}ms ease`}}>
-    <PlayBackControl 
-    isPlaying={isPlaying}
-    setIsPlaying={setIsPlaying}
-    isMuted={isMuted}
-    setIsMuted={setIsMuted}
-    handlePlayback={handlePlayback}
-    restartPlayback={restartPlayback}
-    />
-    <MusicSettings musicSettings={musicSettings} setMusicSettings={setMusicSettings} />
-    <TextInput value={inputText} onChange={setInputText}/>
-    <div className='character-grid'>
-    { sequence.map(noteEvent => (
-      <Cell key={noteEvent.index} 
-      char={noteEvent.char} 
-      pitch={noteEvent.pitch != null ? Tone.Frequency(noteEvent.pitch, "midi").toNote() : null}
-      timing={noteEvent.timing}
-      onClick={() => playNote(noteEvent.pitch)}
-      isActive={noteEvent.index === activeCellIndex}
-      />))}
-      </div>
-      <button onClick={() => playNote(65)}>Test sound</button>
+    <header>
+    <pre
+    style={{
+      fontFamily: "'Courier New', Courier, monospace",
+      fontSize: "12px",
+      lineHeight: 1.17,
+      whiteSpace: "pre",
+      color: "black",
+      padding: "8px",
+      margin: 20,
+    }}
+    >
+    {`╒═════╗ ╒═════╗ ╒═╗  ╒═╗ ╒═════╗ ╒═╗ ╒═╗ ╒═══╗  ╒═╗ ╒═════╗
+└─┐ ╓─╜ │ ╓───╜ └┐╚╗╒╛╓╜ └─┐ ╓─╜ │ ║ │ ║ │   ╚╗ │ ║ │ ╓───╜
+  │ ║   │ ╚═╗    └┐╚╛╓╜    │ ║   │ ║ │ ║ │ ╟┐ ╚╗│ ║ │ ╚═╗  
+  │ ║   │ ╓─╜    ╒╛╓┐╚╗    │ ║   │ ║ │ ║ │ ║└┐ ╚╡ ║ │ ╓─╜  
+  │ ║   │ ╚═══╗ ╒╛╓╜└┐╚╗   │ ║   │ ╚═╛ ║ │ ║ └┐   ║ │ ╚═══╗
+  └─╜   └─────╜ └─╜  └─╜   └─╜   └─────╜ └─╜  └───╜ └─────╜`}
+      </pre>
       
-      </div>
-      </>
-    )
-  }
-  
-  export default App
-  
+      
+      <TextInput id="text-input" className="text-input" value={inputText} onChange={setInputText}/>
+      </header>
+      
+      <div className='character-grid'>
+      { sequence.map(noteEvent => (
+        <Cell key={noteEvent.index} 
+        char={noteEvent.char} 
+        pitch={noteEvent.pitch != null ? Tone.Frequency(noteEvent.pitch, "midi").toNote() : null}
+        timing={noteEvent.timing}
+        onClick={() => playNote(noteEvent.pitch)}
+        isActive={noteEvent.index === activeCellIndex}
+        />))}
+        </div>
+        
+        <div className='control-panel'>
+        <PlayBackControl 
+        isPlaying={isPlaying}
+        setIsPlaying={setIsPlaying}
+        handlePlayback={handlePlayback}
+        restartPlayback={restartPlayback}
+        />
+        <MusicSettings musicSettings={musicSettings} setMusicSettings={setMusicSettings} />
+        </div>
+        
+        
+        
+        
+        
+        </div>
+        
+        </>
+        
+      )
+    }
+    
+    export default App
+    
