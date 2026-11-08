@@ -328,3 +328,7 @@ select.music-settings {
 ::-webkit-scrollbar {
   display: none;
 }
+
+.character-grid {
+  padding: 260px 0 180px;
+}

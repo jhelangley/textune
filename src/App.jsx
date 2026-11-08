@@ -212,7 +212,7 @@ function App() {
   return (
     <>
     <div className='app-container' style={{ backgroundColor: backgroundColour, transition: `background-color ${isRest ? 2000 : 50}ms ease`}}>
-    <header>
+    <header className='app-header'>
     <pre
     style={{
       fontFamily: "'Courier New', Courier, monospace",
