@@ -7,6 +7,7 @@ import PlayBackControl from './components/PlaybackControl.jsx'
 import MusicSettings from './components/MusicSettings.jsx'
 import { charToPitch } from './music/charToPitch.js';
 import { generateSequence } from './music/generateSequence.js'
+import { pitchToColour } from './music/pitchToColour.js';
 
 
 
@@ -18,6 +19,7 @@ function App() {
   const [isMuted, setIsMuted] = useState(false)
   const [activeCellIndex, setActiveCellIndex] = useState(null)
   const [musicSettings, setMusicSettings] = useState({root: 'c', scale: 'major'})
+  const [backgroundColour, setBackgroundColour] = useState("white")
   
   const sequence = useMemo(
     () => generateSequence(inputText, musicSettings.root, musicSettings.scale), 
@@ -26,6 +28,7 @@ function App() {
   
   const synth = useRef(null);
   const partRef = useRef(null);
+  const resumeAfterTypingRef = useRef(false);
   
   const playNote = async (pitch) => {
     if (synth.current === null) synth.current = new Tone.Synth().toDestination();
@@ -44,7 +47,7 @@ function App() {
       const startTime = Tone.Time(noteEvent.startTime * qNote).toBarsBeatsSixteenths()
       const noteName = noteEvent.pitch == null ? null : Tone.Frequency(noteEvent.pitch, "midi").toNote();
       
-      return { time: startTime, note: noteName, index: noteEvent.index }
+      return { time: startTime, note: noteName, index: noteEvent.index, midiPitch: noteEvent.pitch }
     })
     
     // calculate loop end point for Tone.Part
@@ -73,7 +76,10 @@ function App() {
       if (event.note !== null) {
         synth.current.triggerAttackRelease(event.note, "8n", time);
       } 
-      Tone.getDraw().schedule(() => setActiveCellIndex(event.index), time)
+      Tone.getDraw().schedule(() => {
+        setActiveCellIndex(event.index)
+        if (event.note !== null) setBackgroundColour(pitchToColour(event.midiPitch))
+      }, time)
     }, noteArray);
     
     part.loop = true;
@@ -89,11 +95,18 @@ function App() {
     
     partRef.current.start(0);
     transport.start();
-
+    
     
   } 
   
   const handlePlayback = async () => {
+    
+    if (resumeAfterTypingRef.current) {
+      resumeAfterTypingRef.current = false;
+      setIsPlaying(false);
+      return;
+    }
+    
     if (sequence.length === 0) return;
     const transport = Tone.getTransport();
     if (transport.state === "stopped") {
@@ -133,28 +146,61 @@ function App() {
   
   
   useEffect(() => {
+    if (partRef.current === null || inputText.length === 0) return;
+    
     const transport = Tone.getTransport();
-    Tone.getDraw().cancel();
+    
+    if (transport.state === "started") {
+      transport.pause();
+      resumeAfterTypingRef.current = true;
+      
+      Tone.getDraw().cancel();
+      setActiveCellIndex(null);
+    }
+    
+    if (!resumeAfterTypingRef.current) return;
+    
+    const timeoutId = setTimeout(() => {
+      if (!resumeAfterTypingRef.current || partRef.current === null) return;
+      
+      transport.stop();
+      transport.start();
+      
+      resumeAfterTypingRef.current = false;
+    }, 500);
+    
+    return () => clearTimeout(timeoutId); 
+  }, [inputText])
+  
+  useEffect(() => {
     if (partRef.current === null) return;
+    
+    const transport = Tone.getTransport();
+    
     if (sequence.length === 0) {
       transport.stop();
       partRef.current.dispose();
       partRef.current = null;
+      
+      resumeAfterTypingRef.current = false;
+      
+      Tone.getDraw().cancel();
+      setActiveCellIndex(null);
       setIsPlaying(false);
       return;
     }
-    // const wasPlaying = (transport.state === 'started');
-    // transport.stop();
-    partRef.current.clear();
+    
     const { noteArray, loopEnd } = prepToneEvents(sequence);
+    partRef.current.clear();
     noteArray.forEach(event => partRef.current.add(event));
     partRef.current.loopEnd = loopEnd;
-    // if (wasPlaying) transport.start(); 
+    
   }, [sequence])
   
   
   return (
     <>
+    <div className='app-container' style={{ backgroundColor: backgroundColour}}>
     <PlayBackControl 
     isPlaying={isPlaying}
     setIsPlaying={setIsPlaying}
@@ -177,6 +223,7 @@ function App() {
       </div>
       <button onClick={() => playNote(65)}>Test sound</button>
       
+      </div>
       </>
     )
   }

@@ -1,3 +1,8 @@
+.app-container {
+  min-height: 100vh;
+  transition: background-color 150ms ease;
+}
+
 .character-grid {
   display: flex;
   flex-wrap: wrap;
@@ -16,8 +21,8 @@
   flex-shrink: 0;
   position: relative;
   box-sizing: border-box;
-  border: 2px dotted black;
-  color: grey;
+  color: black;
+  border: solid black 1px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,9 +31,10 @@
 }
 
 .active {
-  background-color: blue;
-  border: 2px solid blue;
-  color: white;
+  background-color: white;
+  color: black;
+  border: solid white 1px;
+  transform: scale(1.1);
   font-weight: bold;
 }
 
