@@ -5,7 +5,7 @@ export function generateSequence (inputText, root, scale) {
     const sequence = [];
     let startTime = 0;
     inputText.split('').forEach((char, index) => {
-        let timing = charToTiming(char);
+        const timing = charToTiming(char);
         
         sequence.push({ index: index, 
                         char: char,
