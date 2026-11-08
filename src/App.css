@@ -1,20 +1,27 @@
 .app-container {
   height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-sizing: border-box;
+  
+  
+  overflow-y: auto;
+  position: relative;
+  
 }
 
 .app-header {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10;
 }
 
 .control-panel {
-  margin: auto auto 60px;
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+
   display: flex;
   gap: 12px;
   padding: 16px;
@@ -23,6 +30,8 @@
   width: 90%;
   max-width: 1000px;
   box-sizing: border-box;
+
+  margin: 0;
 }
 
 .control-box {
@@ -62,10 +71,7 @@
   margin: 30px auto;
 
   
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    align-content: flex-start;
+    
   
 }
 
@@ -317,4 +323,8 @@ select.music-settings {
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 32px;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
