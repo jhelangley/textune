@@ -14,3 +14,4 @@ Having originally learned React around six years ago via the FreeCodeCamp syllab
 - add controls to change or randomise note velocity
 - tweak timing to create more satisfying compositions
 - refactor code for readability and reusability
+- sync delay time to tempo
